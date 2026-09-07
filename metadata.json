@@ -1,0 +1,6 @@
+{
+  "name": "SMARTCHECK HUB",
+  "description": "Catálogo inteligente de equipamentos e atividades de manutenção industrial para rondas de supervisão.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
