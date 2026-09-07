@@ -1,6 +1,7 @@
 import React from 'react';
 import { Cpu, FileText, CheckCircle2, Upload } from 'lucide-react';
 import { CatalogMetadata } from '../types';
+import { PWAInstallButton } from './PWAInstallButton';
 
 interface HeaderProps {
   metadata: CatalogMetadata;
@@ -37,6 +38,9 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         <div className="flex items-center space-x-1.5">
+          {/* In-app PWA install trigger button */}
+          <PWAInstallButton variant="header" />
+
           {/* Quick file status button */}
           <button
             id="header-catalog-status-btn"
@@ -50,7 +54,7 @@ export const Header: React.FC<HeaderProps> = ({
             ) : (
               <Upload size={13} className="text-[#0078D4]" />
             )}
-            <span className="max-w-[85px] truncate text-[11px] font-semibold">
+            <span className="max-w-[75px] truncate text-[11px] font-semibold">
               {hasData ? 'Excel Ativo' : 'Subir Excel'}
             </span>
           </button>

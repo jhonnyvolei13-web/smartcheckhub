@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0078D4" />
+      <stop offset="100%" stop-color="#004578" />
+    </linearGradient>
+    <linearGradient id="check-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#F3F2F1" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#001830" flood-opacity="0.3" />
+    </filter>
+  </defs>
+
+  <!-- Background rounded rect -->
+  <rect width="512" height="512" rx="112" fill="url(#bg-grad)" />
+
+  <!-- Industrial grid pattern / tech lines subtle -->
+  <g opacity="0.12" stroke="#FFFFFF" stroke-width="2">
+    <line x1="64" y1="128" x2="448" y2="128" />
+    <line x1="64" y1="256" x2="448" y2="256" />
+    <line x1="64" y1="384" x2="448" y2="384" />
+    <line x1="128" y1="64" x2="128" y2="448" />
+    <line x1="256" y1="64" x2="256" y2="448" />
+    <line x1="384" y1="64" x2="384" y2="448" />
+  </g>
+
+  <!-- Industrial Clipboard / Tablet Frame -->
+  <g filter="url(#shadow)">
+    <!-- Main Slate / Shield -->
+    <rect x="116" y="106" width="280" height="320" rx="36" fill="#002D54" stroke="#4BA0EA" stroke-width="4" />
+    
+    <!-- Top Clip / Sensor Header -->
+    <rect x="196" y="86" width="120" height="40" rx="14" fill="#4BA0EA" />
+    <circle cx="256" cy="106" r="8" fill="#002D54" />
+
+    <!-- Screen / Inner Area -->
+    <rect x="136" y="146" width="240" height="256" rx="20" fill="#003B6F" />
+
+    <!-- Checkmark & Wrench Motif -->
+    <!-- Checklist items styled -->
+    <rect x="160" y="180" width="48" height="8" rx="4" fill="#4BA0EA" opacity="0.8" />
+    <rect x="220" y="180" width="130" height="8" rx="4" fill="#99C8F5" opacity="0.6" />
+
+    <rect x="160" y="212" width="48" height="8" rx="4" fill="#4BA0EA" opacity="0.8" />
+    <rect x="220" y="212" width="100" height="8" rx="4" fill="#99C8F5" opacity="0.6" />
+
+    <!-- Big Bold Industrial Checkmark with Gear Center -->
+    <circle cx="256" cy="300" r="54" fill="#107C41" />
+    <circle cx="256" cy="300" r="48" fill="#107C41" stroke="#34D399" stroke-width="3" />
+    
+    <path d="M234 300 L248 316 L278 284" fill="none" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+  </g>
+
+  <!-- Small Smart Badge Glow -->
+  <circle cx="370" cy="136" r="10" fill="#107C41" stroke="#FFFFFF" stroke-width="3" />
+</svg>

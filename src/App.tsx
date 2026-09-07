@@ -12,6 +12,7 @@ import { ResponsiblesScreen } from './components/ResponsiblesScreen';
 import { FileScreen } from './components/FileScreen';
 import { ActivityDetailModal } from './components/ActivityDetailModal';
 import { ArchitectureModal } from './components/ArchitectureModal';
+import { OfflineIndicator } from './components/OfflineIndicator';
 
 const STORAGE_CATALOG_KEY = 'smartcheck_catalog_data_real_v2';
 const STORAGE_FAVORITES_KEY = 'smartcheck_favorites_real_v2';
@@ -294,6 +295,9 @@ export default function App() {
         isOpen={isArchitectureOpen}
         onClose={() => setIsArchitectureOpen(false)}
       />
+
+      {/* Offline Status Toast Indicator */}
+      <OfflineIndicator />
 
       {/* Fixed Bottom Navigation (Mobile First) */}
       <BottomNav
