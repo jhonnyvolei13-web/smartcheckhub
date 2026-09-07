@@ -9,6 +9,7 @@ export function usePWAInstall() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
+  const [isSafari, setIsSafari] = useState(true);
 
   useEffect(() => {
     // Detect standalone mode (already running as installed PWA)
@@ -18,11 +19,20 @@ export function usePWAInstall() {
         (window.navigator as unknown as { standalone?: boolean }).standalone === true);
     setIsInstalled(isStandalone);
 
-    // Detect iOS devices (iPhone, iPad, iPod)
+    // Detect iOS devices (iPhone, iPad, iPod, iPadOS desktop mode)
     if (typeof window !== 'undefined') {
-      const userAgent = window.navigator.userAgent.toLowerCase();
-      const isIOSDevice = /iphone|ipad|ipod/.test(userAgent);
+      const ua = window.navigator.userAgent.toLowerCase();
+      const isIOSDevice =
+        /iphone|ipad|ipod/.test(ua) ||
+        (window.navigator.platform === 'MacIntel' && window.navigator.maxTouchPoints > 1);
       setIsIOS(isIOSDevice);
+
+      // Check if inside Safari vs Chrome/Firefox/InApp on iOS
+      const isChromeIOS = /crios/i.test(ua);
+      const isFirefoxIOS = /fxios/i.test(ua);
+      const isEdgeIOS = /edgios/i.test(ua);
+      const isOtherBrowser = isChromeIOS || isFirefoxIOS || isEdgeIOS;
+      setIsSafari(!isOtherBrowser);
     }
 
     const handleBeforeInstallPrompt = (e: Event) => {
@@ -64,6 +74,7 @@ export function usePWAInstall() {
     isInstallable: !!deferredPrompt,
     isInstalled,
     isIOS,
+    isSafari,
     install,
   };
 }

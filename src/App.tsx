@@ -13,23 +13,23 @@ import { FileScreen } from './components/FileScreen';
 import { ActivityDetailModal } from './components/ActivityDetailModal';
 import { ArchitectureModal } from './components/ArchitectureModal';
 import { OfflineIndicator } from './components/OfflineIndicator';
-
-const STORAGE_CATALOG_KEY = 'smartcheck_catalog_data_real_v2';
-const STORAGE_FAVORITES_KEY = 'smartcheck_favorites_real_v2';
-const STORAGE_SEARCHES_KEY = 'smartcheck_recent_searches_real_v2';
-
-// Purge any legacy demo/fictional cache from previous sessions
-try {
-  localStorage.removeItem('smartcheck_catalog_data_v1');
-  localStorage.removeItem('smartcheck_favorites_v1');
-  localStorage.removeItem('smartcheck_recent_searches_v1');
-} catch {}
+import {
+  saveCatalogLocally,
+  loadCatalogLocally,
+  saveFavoritesLocally,
+  loadFavoritesLocally,
+  saveSearchesLocally,
+  loadSearchesLocally,
+  clearAllLocalData,
+  requestPersistentStorage,
+  STORAGE_KEYS,
+} from './utils/persistentStorage';
 
 export default function App() {
-  // 1. Catalog Data State (Loaded from LocalStorage or Initial Default)
+  // 1. Catalog Data State (Loaded from LocalStorage initially for zero-flash, then hydrated via IndexedDB)
   const [catalog, setCatalog] = useState<CatalogData>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_CATALOG_KEY);
+      const saved = localStorage.getItem(STORAGE_KEYS.CATALOG);
       if (saved) {
         return JSON.parse(saved);
       }
@@ -39,10 +39,10 @@ export default function App() {
     return INITIAL_CATALOG;
   });
 
-  // 2. Favorites State (starts empty - no fictional data)
+  // 2. Favorites State
   const [favorites, setFavorites] = useState<string[]>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_FAVORITES_KEY);
+      const saved = localStorage.getItem(STORAGE_KEYS.FAVORITES);
       if (saved) {
         return JSON.parse(saved);
       }
@@ -52,10 +52,10 @@ export default function App() {
     return [];
   });
 
-  // 3. Recent Searches State (starts empty - no fictional data)
+  // 3. Recent Searches State
   const [recentSearches, setRecentSearches] = useState<string[]>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_SEARCHES_KEY);
+      const saved = localStorage.getItem(STORAGE_KEYS.SEARCHES);
       if (saved) {
         return JSON.parse(saved);
       }
@@ -74,29 +74,69 @@ export default function App() {
   const [isArchitectureOpen, setIsArchitectureOpen] = useState(false);
   const [isLoadingFile, setIsLoadingFile] = useState(false);
 
-  // Sync state changes to LocalStorage
+  // Initial Hydration & Persistent Storage Setup
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_CATALOG_KEY, JSON.stringify(catalog));
-    } catch (e) {
-      console.error(e);
+    // Request persistent storage for iOS Safari and Android Chrome
+    requestPersistentStorage();
+
+    let isMounted = true;
+
+    async function hydratePersistentData() {
+      // 1. Load from IndexedDB (unlimited quota, immune to iOS 5MB localStorage limit)
+      try {
+        const idbCatalog = await loadCatalogLocally();
+        if (isMounted && idbCatalog && idbCatalog.activities && idbCatalog.activities.length > 0) {
+          setCatalog(idbCatalog);
+          return;
+        }
+      } catch (err) {
+        console.warn('Erro ao carregar do IndexedDB:', err);
+      }
+
+      // 2. If local is empty, try server cache backup (persisted on disk)
+      try {
+        const res = await fetch('/api/catalog');
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && data.catalog && data.catalog.activities && data.catalog.activities.length > 0) {
+            setCatalog(data.catalog);
+            // Save to IndexedDB so it's ready offline
+            await saveCatalogLocally(data.catalog);
+          }
+        }
+      } catch (netErr) {
+        console.warn('Offline ou servidor não disponível para catálogo:', netErr);
+      }
+
+      // Hydrate favorites and searches
+      try {
+        const favs = await loadFavoritesLocally();
+        if (isMounted && favs.length > 0) setFavorites(favs);
+        const srchs = await loadSearchesLocally();
+        if (isMounted && srchs.length > 0) setRecentSearches(srchs);
+      } catch {}
+    }
+
+    hydratePersistentData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Sync state changes to IndexedDB and LocalStorage
+  useEffect(() => {
+    if (catalog.activities && catalog.activities.length > 0) {
+      saveCatalogLocally(catalog);
     }
   }, [catalog]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_FAVORITES_KEY, JSON.stringify(favorites));
-    } catch (e) {
-      console.error(e);
-    }
+    saveFavoritesLocally(favorites);
   }, [favorites]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_SEARCHES_KEY, JSON.stringify(recentSearches));
-    } catch (e) {
-      console.error(e);
-    }
+    saveSearchesLocally(recentSearches);
   }, [recentSearches]);
 
   // Derived Equipments & Responsibles Summaries
@@ -158,11 +198,13 @@ export default function App() {
     setIsLoadingFile(true);
     try {
       const parsedData = await parseExcelFile(file);
+      // Immediately write to IndexedDB to survive any iOS memory pressure
+      await saveCatalogLocally(parsedData);
       setCatalog(parsedData);
       setSelectedEquipment(null);
       setSelectedActivity(null);
 
-      // Attempt background sync to server API
+      // Attempt background sync to server disk cache API
       try {
         await fetch('/api/catalog', {
           method: 'POST',
@@ -177,17 +219,15 @@ export default function App() {
     }
   };
 
-  const handleClearCatalog = () => {
+  const handleClearCatalog = async () => {
     setCatalog(INITIAL_CATALOG);
     setFavorites([]);
     setRecentSearches([]);
     setSelectedEquipment(null);
     setSelectedActivity(null);
     setSelectedResponsibleName(null);
+    await clearAllLocalData();
     try {
-      localStorage.removeItem(STORAGE_CATALOG_KEY);
-      localStorage.removeItem(STORAGE_FAVORITES_KEY);
-      localStorage.removeItem(STORAGE_SEARCHES_KEY);
       fetch('/api/catalog/reset', { method: 'POST' });
     } catch {}
   };

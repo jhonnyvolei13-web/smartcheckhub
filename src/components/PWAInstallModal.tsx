@@ -1,5 +1,5 @@
-import React from 'react';
-import { Download, Share, PlusSquare, X, CheckCircle2, Smartphone, ShieldCheck, Zap, WifiOff } from 'lucide-react';
+import React, { useState } from 'react';
+import { Download, Share, PlusSquare, X, CheckCircle2, Smartphone, ShieldCheck, Zap, WifiOff, Copy, Check } from 'lucide-react';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 
 interface PWAInstallModalProps {
@@ -8,7 +8,8 @@ interface PWAInstallModalProps {
 }
 
 export const PWAInstallModal: React.FC<PWAInstallModalProps> = ({ isOpen, onClose }) => {
-  const { isInstallable, isInstalled, isIOS, install } = usePWAInstall();
+  const { isInstallable, isInstalled, isIOS, isSafari, install } = usePWAInstall();
+  const [copied, setCopied] = useState(false);
 
   if (!isOpen) return null;
 
@@ -21,6 +22,14 @@ export const PWAInstallModal: React.FC<PWAInstallModalProps> = ({ isOpen, onClos
     }
   };
 
+  const handleCopyLink = () => {
+    try {
+      navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch {}
+  };
+
   return (
     <div
       id="pwa-install-modal-overlay"
@@ -29,7 +38,7 @@ export const PWAInstallModal: React.FC<PWAInstallModalProps> = ({ isOpen, onClos
     >
       <div
         id="pwa-install-modal-card"
-        className="w-full max-w-md bg-white rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl border border-[#EDEBE9] space-y-5 animate-in slide-in-from-bottom duration-200"
+        className="w-full max-w-md bg-white rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl border border-[#EDEBE9] space-y-4 animate-in slide-in-from-bottom duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
@@ -65,20 +74,20 @@ export const PWAInstallModal: React.FC<PWAInstallModalProps> = ({ isOpen, onClos
 
         {/* Benefits Grid */}
         <div className="grid grid-cols-3 gap-2 text-center">
-          <div className="bg-[#F3F2F1] p-3 rounded-2xl border border-[#EDEBE9]">
-            <Zap size={18} className="text-[#0078D4] mx-auto mb-1" />
+          <div className="bg-[#F3F2F1] p-2.5 rounded-2xl border border-[#EDEBE9]">
+            <Zap size={16} className="text-[#0078D4] mx-auto mb-1" />
             <span className="text-[11px] font-bold text-[#323130] block">Acesso Rápido</span>
-            <span className="text-[10px] text-[#605E5C]">Direto da tela inicial</span>
+            <span className="text-[10px] text-[#605E5C]">Tela de início</span>
           </div>
-          <div className="bg-[#F3F2F1] p-3 rounded-2xl border border-[#EDEBE9]">
-            <WifiOff size={18} className="text-[#107C41] mx-auto mb-1" />
+          <div className="bg-[#F3F2F1] p-2.5 rounded-2xl border border-[#EDEBE9]">
+            <WifiOff size={16} className="text-[#107C41] mx-auto mb-1" />
             <span className="text-[11px] font-bold text-[#323130] block">Modo Offline</span>
-            <span className="text-[10px] text-[#605E5C]">Funciona sem sinal</span>
+            <span className="text-[10px] text-[#605E5C]">Catálogo salvo</span>
           </div>
-          <div className="bg-[#F3F2F1] p-3 rounded-2xl border border-[#EDEBE9]">
-            <Smartphone size={18} className="text-[#0078D4] mx-auto mb-1" />
+          <div className="bg-[#F3F2F1] p-2.5 rounded-2xl border border-[#EDEBE9]">
+            <Smartphone size={16} className="text-[#0078D4] mx-auto mb-1" />
             <span className="text-[11px] font-bold text-[#323130] block">Tela Cheia</span>
-            <span className="text-[10px] text-[#605E5C]">Sem barras de navegador</span>
+            <span className="text-[10px] text-[#605E5C]">Sem barra URL</span>
           </div>
         </div>
 
@@ -95,24 +104,70 @@ export const PWAInstallModal: React.FC<PWAInstallModalProps> = ({ isOpen, onClos
           </div>
         ) : isIOS ? (
           <div className="bg-[#F3F2F1] rounded-2xl p-4 border border-[#EDEBE9] space-y-3">
-            <p className="text-xs font-bold text-[#323130] flex items-center gap-1.5">
-              <Smartphone size={14} className="text-[#0078D4]" />
-              Como instalar no iPhone / iPad (iOS Safari):
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-bold text-[#323130] flex items-center gap-1.5">
+                <Smartphone size={15} className="text-[#0078D4]" />
+                Como instalar no iPhone / iPad (iOS):
+              </p>
+              <span className="text-[10px] font-semibold bg-[#0078D4]/10 text-[#0078D4] px-2 py-0.5 rounded-md">
+                Exclusivo Apple
+              </span>
+            </div>
+
+            <p className="text-[11px] text-[#605E5C] leading-tight">
+              A Apple (iOS) não permite botão de instalação direta de 1 clique como no Android. A instalação é feita pelo navegador <strong>Safari</strong>:
             </p>
-            <ol className="text-xs text-[#605E5C] space-y-2 pl-1">
-              <li className="flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-[#0078D4] text-white text-[11px] font-bold flex items-center justify-center shrink-0">1</span>
-                <span>Toque no botão <strong>Compartilhar</strong> <Share size={13} className="inline text-[#0078D4]" /> na barra do Safari.</span>
+
+            {!isSafari && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-2.5 text-[11px] text-amber-900 flex items-start gap-2">
+                <div className="shrink-0 mt-0.5 font-bold">⚠️</div>
+                <div>
+                  Você parece estar usando o Chrome ou outro navegador no iPhone. Abra o link no <strong>Safari</strong> para conseguir instalar na Tela de Início.
+                </div>
+              </div>
+            )}
+
+            <ol className="text-xs text-[#323130] space-y-2.5 pl-1 pt-1">
+              <li className="flex items-start gap-2.5">
+                <span className="w-6 h-6 rounded-full bg-[#0078D4] text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+                  1
+                </span>
+                <div>
+                  <span>Na barra inferior do <strong>Safari</strong>, toque no ícone <strong>Compartilhar</strong>:</span>
+                  <div className="inline-flex items-center gap-1 bg-white border border-[#EDEBE9] px-2 py-0.5 rounded-md ml-1 text-[#0078D4] font-semibold">
+                    <Share size={13} />
+                    <span>Compartilhar</span>
+                  </div>
+                </div>
               </li>
-              <li className="flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-[#0078D4] text-white text-[11px] font-bold flex items-center justify-center shrink-0">2</span>
-                <span>Role para baixo e selecione <strong>Adicionar à Tela de Início</strong> <PlusSquare size={13} className="inline text-[#0078D4]" />.</span>
+              <li className="flex items-start gap-2.5">
+                <span className="w-6 h-6 rounded-full bg-[#0078D4] text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+                  2
+                </span>
+                <div>
+                  <span>Role as opções para baixo e toque em:</span>
+                  <div className="inline-flex items-center gap-1 bg-white border border-[#EDEBE9] px-2 py-0.5 rounded-md ml-1 text-[#323130] font-semibold">
+                    <PlusSquare size={13} className="text-[#0078D4]" />
+                    <span>Adicionar à Tela de Início</span>
+                  </div>
+                </div>
               </li>
-              <li className="flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-[#0078D4] text-white text-[11px] font-bold flex items-center justify-center shrink-0">3</span>
-                <span>Toque em <strong>Adicionar</strong> no canto superior direito.</span>
+              <li className="flex items-start gap-2.5">
+                <span className="w-6 h-6 rounded-full bg-[#0078D4] text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+                  3
+                </span>
+                <span>Toque em <strong>Adicionar</strong> no canto superior direito da tela do iPhone.</span>
               </li>
             </ol>
+
+            <button
+              type="button"
+              onClick={handleCopyLink}
+              className="w-full mt-1 py-2 px-3 bg-white border border-[#EDEBE9] hover:bg-[#EDEBE9] text-[#0078D4] font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer"
+            >
+              {copied ? <Check size={14} className="text-[#107C41]" /> : <Copy size={14} />}
+              <span>{copied ? 'Link Copiado! Abra no Safari' : 'Copiar Link do Aplicativo'}</span>
+            </button>
           </div>
         ) : isInstallable ? (
           <div className="space-y-3">
@@ -133,10 +188,10 @@ export const PWAInstallModal: React.FC<PWAInstallModalProps> = ({ isOpen, onClos
           <div className="bg-[#F3F2F1] rounded-2xl p-4 border border-[#EDEBE9] space-y-2 text-xs text-[#605E5C]">
             <p className="font-bold text-[#323130] flex items-center gap-1.5">
               <ShieldCheck size={14} className="text-[#107C41]" />
-              Instalação pelo Navegador (Chrome / Edge):
+              Instalação pelo Navegador (Chrome / Edge / Safari):
             </p>
             <p className="leading-relaxed">
-              No menu do seu navegador (três pontos ⋮ ou ícone na barra de endereços), clique em <strong>&quot;Instalar SmartCheck Hub&quot;</strong> ou <strong>&quot;Adicionar à tela inicial&quot;</strong>.
+              No menu do seu navegador (três pontos ⋮, menu Compartilhar ou ícone na barra de endereços), clique em <strong>&quot;Instalar SmartCheck Hub&quot;</strong> ou <strong>&quot;Adicionar à tela de início&quot;</strong>.
             </p>
           </div>
         )}
@@ -145,7 +200,7 @@ export const PWAInstallModal: React.FC<PWAInstallModalProps> = ({ isOpen, onClos
         <button
           type="button"
           onClick={onClose}
-          className="w-full py-2.5 text-xs font-semibold text-[#605E5C] hover:text-[#323130] transition-colors"
+          className="w-full py-2 text-xs font-semibold text-[#605E5C] hover:text-[#323130] transition-colors cursor-pointer"
         >
           Fechar
         </button>

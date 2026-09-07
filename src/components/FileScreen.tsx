@@ -172,6 +172,12 @@ export const FileScreen: React.FC<FileScreenProps> = ({
           <p className="text-xs text-[#A19F9D]">
             Tamanho: {formatFileSize(metadata.fileSize)} • {hasData ? 'Planilha ativa no aplicativo' : 'Aguardando upload de planilha'}
           </p>
+          {hasData && (
+            <p className="text-[11px] text-[#107C41] flex items-center gap-1 font-semibold pt-0.5">
+              <Database size={12} className="text-[#107C41]" />
+              <span>Salvo com persistência no dispositivo (IndexedDB seguro sem limite de cota)</span>
+            </p>
+          )}
         </div>
 
         {/* Statistics Grid */}
